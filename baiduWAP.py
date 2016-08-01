@@ -78,7 +78,7 @@ def saveToDB(titleArr,realLinks,ips):
 		for item in titleArr:
 			thisIndex = titleArr.index(item)
 			thisTitle = item
-			thisDomain = 'http://'+realLinks[thisIndex]
+			thisDomain = realLinks[thisIndex]
 			thisIP = ips[thisIndex]
 
 			cu.execute("select * from search where domain='%s'" % (thisDomain))

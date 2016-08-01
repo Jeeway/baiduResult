@@ -115,7 +115,7 @@ if __name__ == '__main__':
 	print '[*] 开始提取真实链接...'
 	for link in oldinkArr:
 		tmpHeaders = requests.head(link).headers
-		tmplink = tmpHeaders['Location']
+		tmplink = tmpHeaders['Location'].split('http://')[1].split('/')[0]
 		realLinks.append(tmplink)
 		print '提取 '+tmplink+' 完成'
 	print '[√] 提取真实链接完成'
