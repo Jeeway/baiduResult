@@ -6,8 +6,14 @@ from threading import Thread
 import requests
 import sqlite3
 import Queue
+import json
 import sys
 import re
+
+# Console colors
+W  = '\033[0m'  # white (normal)
+R  = '\033[31m' # red
+G  = '\033[32m' # green
 
 reload(sys)
 sys.setdefaultencoding('utf8')
@@ -62,6 +68,17 @@ def getUrls():
 	except Exception,e:
 		print e
 
+def getposition(host):
+    try:
+        ipurl = "http://ip.taobao.com/service/getIpInfo.php?ip="+host
+        header = {"User-Agent":"Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0"}
+        req = requests.get(url = ipurl,headers = header,timeout = 5)
+        jsondata = json.loads(req.content.decode('utf8').encode('utf8'))['data']
+        info = [jsondata['country'],jsondata['region'],jsondata['city'],jsondata['isp']]
+        return info
+    except Exception, e:
+        pass
+
 def getIPbyDomain(domain):
 	try:
 		tmpresult = requests.get('http://ip138.com/ips1388.asp?ip='+domain+'&action=2').content
@@ -72,6 +89,7 @@ def getIPbyDomain(domain):
 		IPS.append('null')
 
 def saveToDB(titleArr,realDomains,realLinks,ips):
+	thisPosition = []
 	try:
 		cx = sqlite3.connect(sys.path[0]+"/baidu.db")
 		cx.text_factory = str
@@ -84,15 +102,19 @@ def saveToDB(titleArr,realDomains,realLinks,ips):
 			thisURL = realLinks[thisIndex]
 
 			if thisIP != 'null':
-				cu.execute("select * from search where domain='%s' and ip='%s'" % (thisDomain,thisIP))
-				if not cu.fetchone():
-					cu.execute("insert into search (title,domain,url,ip) values (?,?,?,?)", (thisTitle,thisDomain,thisURL,thisIP))
-					cx.commit()
-					print '[√] Found ' +thisTitle +' => Insert successly!'
+				thisPosition = getposition(thisIP)
+				if thisPosition != None:
+					cu.execute("select * from search where domain='%s' and ip='%s'" % (thisDomain,thisIP))
+					if not cu.fetchone():
+						cu.execute("insert into search (title,domain,url,ip,country,province,city,isp) values (?,?,?,?,?,?,?,?)", (thisTitle,thisDomain,thisURL,thisIP,thisPosition[0],thisPosition[1],thisPosition[2],thisPosition[3]))
+						cx.commit()
+						print G + '[√] Found ' +thisTitle +' => Insert successly!' + W
+					else:
+						print R + '[x] Found ' +thisTitle +' <= Found in database!' + W
 				else:
-					print '[x] Found ' +thisTitle +' <= Found in database!'
+					print R + '[x] Pass ' +thisTitle +' <= No position!' + W
 			else:
-				print '[x] Pass ' +thisTitle +' <= IP is null!'
+				print R + '[x] Pass ' +thisTitle +' <= IP is null!' + W
 		cu.close()
 		cx.close()
 	except Exception, e:
