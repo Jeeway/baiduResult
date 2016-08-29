@@ -72,7 +72,7 @@ def getposition(host):
     try:
         ipurl = "http://ip.taobao.com/service/getIpInfo.php?ip="+host
         header = {"User-Agent":"Mozilla/5.0 (X11; Linux x86_64; rv:45.0) Gecko/20100101 Firefox/45.0"}
-        req = requests.get(url = ipurl,headers = header,timeout = 5)
+        req = requests.get(url = ipurl,headers = header,timeout = 15)
         jsondata = json.loads(req.content.decode('utf8').encode('utf8'))['data']
         info = [jsondata['country'],jsondata['region'],jsondata['city'],jsondata['isp']]
         return info
@@ -88,7 +88,21 @@ def getIPbyDomain(domain):
 	except Exception,e:
 		IPS.append('null')
 
+def clearDB():
+	try:
+		cx = sqlite3.connect(sys.path[0]+"/baidu.db")
+		cx.text_factory = str
+		cu = cx.cursor()
+		cu.execute("delete from search")
+		cu.execute("update sqlite_sequence SET seq = 0 where name ='search'")
+		cx.commit()
+		cu.close()
+		cx.close()
+	except Exception, e:
+		print e
+
 def saveToDB(titleArr,realDomains,realLinks,ips):
+	clearDB()
 	thisPosition = []
 	try:
 		cx = sqlite3.connect(sys.path[0]+"/baidu.db")
