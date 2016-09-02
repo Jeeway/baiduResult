@@ -116,17 +116,17 @@ def saveToDB(titleArr,realDomains,realLinks,ips):
 			thisURL = realLinks[thisIndex]
 
 			if thisIP != 'null':
-				thisPosition = getposition(thisIP)
-				if thisPosition != None:
-					cu.execute("select * from search where domain='%s' and ip='%s'" % (thisDomain,thisIP))
-					if not cu.fetchone():
+				cu.execute("select * from search where domain='%s' or ip='%s'" % (thisDomain,thisIP))
+				if not cu.fetchone():
+					thisPosition = getposition(thisIP)
+					if thisPosition != None:
 						cu.execute("insert into search (title,domain,url,ip,country,province,city,isp) values (?,?,?,?,?,?,?,?)", (thisTitle,thisDomain,thisURL,thisIP,thisPosition[0],thisPosition[1],thisPosition[2],thisPosition[3]))
 						cx.commit()
 						print G + '[√] Found ' +thisTitle +' => Insert successly!' + W
 					else:
-						print R + '[x] Found ' +thisTitle +' <= Found in database!' + W
+						print R + '[x] Pass ' +thisTitle +' <= No position!' + W
 				else:
-					print R + '[x] Pass ' +thisTitle +' <= No position!' + W
+					print R + '[x] Found ' +thisTitle +' <= Found in database!' + W
 			else:
 				print R + '[x] Pass ' +thisTitle +' <= IP is null!' + W
 		cu.close()
