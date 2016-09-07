@@ -1,2 +1,2 @@
 # baiduResult
-详细介绍在 http://www.92ez.com/projects/
+详细介绍在 http://blog.92ez.com/projects/
